@@ -1,7 +1,10 @@
 initializeLines();
 
+
 function initializeLines() {
     console.log('drawing lines');
+
+
     const game = document.getElementById('game');
     const ctx = game.getContext('2d');
     ctx.beginPath();
@@ -10,6 +13,8 @@ function initializeLines() {
     ctx.lineWidth = 1;
     ctx.strokeStyle = "white";
     ctx.stroke();
+
+
     console.log('Lines drawn!');
 
     //draw paddles
@@ -21,6 +26,7 @@ function initializeLines() {
 
 
 }
+
 
 function drawBall(context){
     context.beginPath();
