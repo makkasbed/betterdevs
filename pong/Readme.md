@@ -1,5 +1,5 @@
 # Developing Pong Using Javascript
-This project is based on the code challenge by John Crickett: [here](https://codingchallenges.substack.com/p/coding-challenge-36-pong)
+This project is based on the code challenge by John Crickett [here](https://codingchallenges.substack.com/p/coding-challenge-36-pong)
 
 
 The steps for developing are shown below:
