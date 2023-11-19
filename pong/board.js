@@ -18,13 +18,21 @@ function initializeLines() {
     console.log('Lines drawn!');
 
     //draw paddles
-    drawLeftPaddle(ctx);
-    drawRightPaddle(ctx);
+    drawPaddle(ctx, 20, 300, 5, 80, "human"); //left paddle
+    drawPaddle(ctx, 780, 300, 5, 80, "computer"); // right paddle
+
 
     //draw ball
     drawBall(ctx);
 
 
+}
+
+function drawPaddle(context,width,height,xpos, ypos, type){
+    context.beginPath();
+    context.rect(width, height, xpos, ypos);
+    context.strokeStyle = "#ADD8e6";
+    context.stroke();
 }
 
 
@@ -34,18 +42,3 @@ function drawBall(context){
     context.strokeStyle = "green";
     context.stroke();
 }
-
-function drawLeftPaddle(context) {
-    context.beginPath();
-    context.rect(20, 300, 5, 80);
-    context.strokeStyle = "#ADD8E6";
-    context.stroke();
-}
-
-function drawRightPaddle(context) {
-    context.beginPath();
-    context.rect(780, 300, 5, 80);
-    context.strokeStyle = "#ADD8E6";
-    context.stroke();
-}
-
