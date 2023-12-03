@@ -1,44 +1,45 @@
-#! /usr/bin/env node
-const { program } = require('commander');
-const { config } = require('dotenv');
 const net = require('net');
-const quit = require('./commands/quit');
+const { parseArgs } = require('./parseArgs');
+const { parseResp } = require('./parseResp');
+const prompt = require('prompt-sync')({sigint: true});
 
 
-config();
+const client = new net.Socket();
+let port = 6379;
+let host = '127.0.0.1';
 
-program.option('-h, --host <string>');
-
-program.command('quit')
-       .description('Quit the rediscli')
-       .action(quit);
+let command = '';
 
 
-
-let host = "";
-let port = "";
+const args = parseArgs(process.argv.slice(2));
 
 
+if (args.hasOwnProperty("h")) {
+    host = args["h"];
+    if (args.hasOwnProperty("p")) {
+        port = args["p"];
+    }
+}
 
-const client = net.createConnection(process.env.PORT, process.env.HOST,()=>{
-    console.log(`Connected to Redis Server ${process.env.HOST}`);
-    client.write('\r\nping hello\r\n');
+client.connect(port, host, function() {
+   
+    client.write('\r\nPING\r\n');
+    
 });
 
-client.on("data",(data)=>{
-    console.log(`Received: ${data}`);
+client.on('data', function(data) {
+    console.log(parseResp(data.toString()));
+    command = prompt(`${host}:${port}>`);
+    if (command == 'quit') {
+        process.exit();
+    }else{
+        client.write(`\r\n${command}\r\n`);
+    }
+    
 });
 
-client.on("error",(err)=>{
-    console.log(`Error: ${err.message}`);
+client.on('close', function() {
+    console.log('Connection closed');
 });
 
-client.on("close",()=>{
-    console.log("Connection closed");
-});
 
-program.parse();
-
-const options = program.opts();
-host = options.host;
-console.log('Host ', host);
