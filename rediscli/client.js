@@ -1,3 +1,4 @@
+#! /usr/bin/env node
 const net = require('net');
 const { parseArgs } = require('./parseArgs');
 const { parseResp } = require('./parseResp');
@@ -11,7 +12,7 @@ let host = '127.0.0.1';
 let command = '';
 
 
-const args = parseArgs(process.argv.slice(2));
+const args = parseArgs(process.argv.slice(1));
 
 
 if (args.hasOwnProperty("h")) {
