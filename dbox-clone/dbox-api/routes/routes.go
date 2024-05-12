@@ -1,11 +1,13 @@
 package routes
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 	"kasbedlabs.com/dbox-api/db"
 	"kasbedlabs.com/dbox-api/models"
+	"kasbedlabs.com/dbox-api/storage"
 )
 
 func CreateUser(c *gin.Context) {
@@ -22,8 +24,13 @@ func CreateUser(c *gin.Context) {
 	id := db.CreateUser(user)
 
 	if id != "" {
+		isCreated := storage.MakeDirectory(id)
+		if isCreated {
+			fmt.Println("Folder created!")
+		}
 		response.Status = 1
 		response.Message = "User created successfully!"
+		response.Id = id
 		c.JSON(http.StatusCreated, response)
 	} else {
 		response.Status = 0

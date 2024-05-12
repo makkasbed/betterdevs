@@ -2,10 +2,12 @@ package db
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"os"
 	"time"
 
+	"github.com/joho/godotenv"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -19,7 +21,9 @@ var collection *mongo.Collection
 var COLLECTION = ""
 
 func GetClient() *mongo.Client {
+	godotenv.Load()
 	uri := os.Getenv("DB_URL")
+	fmt.Println("db ", uri)
 	//getting context
 	if client != nil {
 		return client
