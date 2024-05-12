@@ -16,4 +16,6 @@ type File struct {
 	FileType  string             `json:"file_type"`
 	Folder    string             `json:"folder"`
 	CreatedAt string             `json:"created_at"`
+	Data      string             `json:"data"`
+	UserId    string             `json:"user_id"`
 }

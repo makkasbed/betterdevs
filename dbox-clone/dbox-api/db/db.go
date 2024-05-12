@@ -23,7 +23,6 @@ var COLLECTION = ""
 func GetClient() *mongo.Client {
 	godotenv.Load()
 	uri := os.Getenv("DB_URL")
-	fmt.Println("db ", uri)
 	//getting context
 	if client != nil {
 		return client
@@ -63,17 +62,20 @@ func CreateUser(user models.User) string {
 	usersCollection := GetCollection(client, "users")
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
+	id := primitive.NewObjectID()
 	userObject := models.User{
-		Id:       primitive.NewObjectID(),
-		Name:     user.Name,
-		Email:    user.Email,
-		Password: user.Password,
+		Id:        id,
+		Name:      user.Name,
+		Email:     user.Email,
+		Password:  user.Password,
+		CreatedAt: time.Now().Format("2006-01-02 15:04:05"),
 	}
 	result, err := usersCollection.InsertOne(ctx, userObject)
 	if err != nil {
 		return ""
 	}
-	return result.InsertedID.(primitive.ObjectID).Hex()
+	fmt.Println(result)
+	return id.Hex()
 }
 func Login(email string, password string) *models.User {
 	client := GetClient()
@@ -94,16 +96,19 @@ func SaveFolder(folder models.Folder) string {
 	foldersCollection := GetCollection(client, "folders")
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
+	id := primitive.NewObjectID()
 	folderObject := models.Folder{
-		Id:        primitive.NewObjectID(),
+		Id:        id,
 		Name:      folder.Name,
-		CreatedAt: time.Now().Format("2024-05-11 17:45"),
+		CreatedAt: time.Now().Format("2006-01-02 15:04:05"),
+		UserId:    folder.UserId,
 	}
 	result, err := foldersCollection.InsertOne(ctx, folderObject)
 	if err != nil {
 		return ""
 	}
-	return result.InsertedID.(primitive.ObjectID).Hex()
+	fmt.Println(result)
+	return id.Hex()
 }
 
 func ListFolders(userId string) []models.Folder {
@@ -113,10 +118,10 @@ func ListFolders(userId string) []models.Folder {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	var folders []models.Folder
-	cursor, err := collection.Find(ctx, bson.D{{Name: "user_id", Value: userId}})
+	cursor, err := collection.Find(ctx, bson.M{"userid": userId})
 	defer cursor.Close(ctx)
 	if err != nil {
-		log.Fatalln(err)
+		fmt.Println(err.Error())
 		return nil
 	}
 	//Iterating through the book elements
@@ -124,7 +129,7 @@ func ListFolders(userId string) []models.Folder {
 		var folder models.Folder
 		err := cursor.Decode(&folder)
 		if err != nil {
-			log.Fatalln(err)
+			fmt.Println(err.Error())
 		}
 		folder.Files = ListFiles(folder.Id.Hex())
 		folders = append(folders, folder)
@@ -138,17 +143,21 @@ func SaveFile(file models.File) string {
 	filesCollection := GetCollection(client, "files")
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
+	id := primitive.NewObjectID()
 	fileObject := models.File{
-		Id:        primitive.NewObjectID(),
+		Id:        id,
 		Name:      file.Name,
 		FileType:  file.FileType,
-		CreatedAt: time.Now().Format("2024-05-11 17:43"),
+		CreatedAt: time.Now().Format("2006-01-02 15:04:05"),
+		Folder:    file.Folder,
+		UserId:    file.UserId,
 	}
 	result, err := filesCollection.InsertOne(ctx, fileObject)
 	if err != nil {
 		return ""
 	}
-	return result.InsertedID.(primitive.ObjectID).Hex()
+	fmt.Println(result)
+	return id.Hex()
 }
 
 func ListFiles(folderId string) []models.File {
@@ -158,7 +167,7 @@ func ListFiles(folderId string) []models.File {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	var files []models.File
-	cursor, err := collection.Find(ctx, bson.D{{Name: "folder", Value: folderId}})
+	cursor, err := collection.Find(ctx, bson.M{"folder": folderId})
 	defer cursor.Close(ctx)
 	if err != nil {
 		log.Fatalln(err)

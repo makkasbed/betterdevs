@@ -3,6 +3,7 @@ package routes
 import (
 	"fmt"
 	"net/http"
+	"os"
 
 	"github.com/gin-gonic/gin"
 	"kasbedlabs.com/dbox-api/db"
@@ -53,8 +54,14 @@ func CreateFolder(c *gin.Context) {
 	id := db.SaveFolder(folder)
 
 	if id != "" {
+
+		status := storage.MakeDirectory(folder.UserId + "/" + id)
+		if status {
+			fmt.Println("Folder created!")
+		}
 		response.Status = 1
 		response.Message = "Folder created successfully!"
+		response.Id = id
 		c.JSON(http.StatusCreated, response)
 	} else {
 		response.Status = 0
@@ -77,8 +84,13 @@ func CreateFile(c *gin.Context) {
 	id := db.SaveFile(file)
 
 	if id != "" {
+		path, err := storage.CreateFile(os.Getenv("STORE")+"/"+file.UserId+"/"+file.Folder, file.Name, file.FileType, file.Data)
+		if err != nil {
+			fmt.Println(err.Error())
+		}
 		response.Status = 1
-		response.Message = "File created successfully!"
+		response.Message = "File created successfully: " + path
+		response.Id = id
 		c.JSON(http.StatusCreated, response)
 	} else {
 		response.Status = 0
@@ -91,6 +103,7 @@ func ListFolders(c *gin.Context) {
 
 	var response models.Response
 	userID := c.Param("id")
+	fmt.Println(userID)
 
 	folders := db.ListFolders(userID)
 
