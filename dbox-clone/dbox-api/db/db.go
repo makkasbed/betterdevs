@@ -14,11 +14,14 @@ import (
 	"gopkg.in/mgo.v2/bson"
 
 	"kasbedlabs.com/dbox-api/models"
+	"kasbedlabs.com/dbox-api/utils"
 )
 
 var client *mongo.Client
 var collection *mongo.Collection
 var COLLECTION = ""
+
+const DATE_FORMAT = "2006-01-02 15:04:05"
 
 func GetClient() *mongo.Client {
 	godotenv.Load()
@@ -63,12 +66,13 @@ func CreateUser(user models.User) string {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	id := primitive.NewObjectID()
+	hash, _ := utils.HashPassword(user.Password)
 	userObject := models.User{
 		Id:        id,
 		Name:      user.Name,
 		Email:     user.Email,
-		Password:  user.Password,
-		CreatedAt: time.Now().Format("2006-01-02 15:04:05"),
+		Password:  hash,
+		CreatedAt: time.Now().Format(DATE_FORMAT),
 	}
 	result, err := usersCollection.InsertOne(ctx, userObject)
 	if err != nil {
@@ -77,13 +81,27 @@ func CreateUser(user models.User) string {
 	fmt.Println(result)
 	return id.Hex()
 }
+func FindUser(id string) *models.User {
+	client := GetClient()
+	collection := GetCollection(client, "users")
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	var user *models.User
+	objID, _ := primitive.ObjectIDFromHex(id)
+	filter := bson.M{"id": objID}
+	err := collection.FindOne(ctx, filter).Decode(&user)
+	if err != nil {
+		return nil
+	}
+	return user
+}
 func Login(email string, password string) *models.User {
 	client := GetClient()
 	collection := GetCollection(client, "users")
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	var user *models.User
-	filter := bson.D{{Name: "email", Value: email}}
+	filter := bson.M{"email": email}
 	err := collection.FindOne(ctx, filter).Decode(&user)
 	if err != nil {
 		return nil
@@ -100,7 +118,7 @@ func SaveFolder(folder models.Folder) string {
 	folderObject := models.Folder{
 		Id:        id,
 		Name:      folder.Name,
-		CreatedAt: time.Now().Format("2006-01-02 15:04:05"),
+		CreatedAt: time.Now().Format(DATE_FORMAT),
 		UserId:    folder.UserId,
 	}
 	result, err := foldersCollection.InsertOne(ctx, folderObject)
@@ -148,7 +166,7 @@ func SaveFile(file models.File) string {
 		Id:        id,
 		Name:      file.Name,
 		FileType:  file.FileType,
-		CreatedAt: time.Now().Format("2006-01-02 15:04:05"),
+		CreatedAt: time.Now().Format(DATE_FORMAT),
 		Folder:    file.Folder,
 		UserId:    file.UserId,
 	}

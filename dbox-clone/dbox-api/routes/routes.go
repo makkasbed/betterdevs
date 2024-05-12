@@ -9,8 +9,16 @@ import (
 	"kasbedlabs.com/dbox-api/db"
 	"kasbedlabs.com/dbox-api/models"
 	"kasbedlabs.com/dbox-api/storage"
+	"kasbedlabs.com/dbox-api/utils"
 )
 
+// @Summary Creates a user on the platform
+// @Description creates a user based on the name, email, and password passed as a json object
+// @Accept  json
+// @Produce  json
+// @Body  {"name":"adu", "email":"adu@xy.com","password":"adu123$!"}
+// @Success 201 {string} string  "created"
+// @Router /users [post]
 func CreateUser(c *gin.Context) {
 	var user models.User
 	var response models.Response
@@ -51,6 +59,8 @@ func CreateFolder(c *gin.Context) {
 		response.Message = err.Error()
 		c.AbortWithStatusJSON(http.StatusBadRequest, response)
 	}
+	usr, _ := c.Get("user")
+	fmt.Println("user", usr)
 	id := db.SaveFolder(folder)
 
 	if id != "" {
@@ -133,9 +143,21 @@ func LoginUser(c *gin.Context) {
 	} else {
 		user := db.Login(login.Email, login.Password)
 		if user != nil {
-			response.Status = 1
-			response.Message = "Login successful!"
-			c.JSON(http.StatusOK, response)
+			match := utils.VerifyPassword(login.Password, user.Password)
+			if match {
+
+				token, _ := utils.CreateToken(string(user.Id.Hex()))
+
+				response.Status = 1
+				response.Message = "Login successful!"
+				response.AccessToken = token
+				c.JSON(http.StatusOK, response)
+			} else {
+				response.Status = 0
+				response.Message = "Login unsuccessful! Verify credentials"
+				c.JSON(http.StatusOK, response)
+			}
+
 		} else {
 			response.Status = 0
 			response.Message = "Login unsuccessful!"
