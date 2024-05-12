@@ -137,6 +137,9 @@ func ListFolders(userId string) []models.Folder {
 	defer cancel()
 	var folders []models.Folder
 	cursor, err := collection.Find(ctx, bson.M{"userid": userId})
+	if err != nil {
+		fmt.Println(err.Error())
+	}
 	defer cursor.Close(ctx)
 	if err != nil {
 		fmt.Println(err.Error())
@@ -186,6 +189,9 @@ func ListFiles(folderId string) []models.File {
 	defer cancel()
 	var files []models.File
 	cursor, err := collection.Find(ctx, bson.M{"folder": folderId})
+	if err != nil {
+		fmt.Println(err.Error())
+	}
 	defer cursor.Close(ctx)
 	if err != nil {
 		log.Fatalln(err)
